@@ -108,3 +108,46 @@ select { border: 0; background: #2b2117; color: var(--ink); padding: 5px; }
   .hud { top: 10px; }
   .game-toolbar { top: 80px; }
 }
+
+/* Let translated copy wrap inside the painted panels and compact HUD. */
+.sprite-button { max-width: 100%; min-width: 0; line-height: 1.35; }
+.button-content { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.button-content>span { min-width: 0; }
+.overline, .menu-tagline, .rule-hint, .menu-footnote, .turn-message, .table-count,
+.settings-warning, .finish-menu { overflow-wrap: anywhere; }
+.asset-loading { padding: 24px; text-align: center; overflow-wrap: anywhere; }
+.setting-row>span { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.stepper, .setting-row>select { flex-shrink: 0; }
+.settings-links button { min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.settings-links button:last-child { text-align: right; }
+.sobriety>div:first-child>span { min-width: 0; overflow-wrap: anywhere; }
+.sobriety b { flex-shrink: 0; white-space: nowrap; }
+.choices .button-content img { flex-shrink: 0; }
+.turn-controls { pointer-events: none; }
+.choices .sprite-button:not(:disabled) { pointer-events: auto; }
+.control-bar { position: absolute; z-index: 6; top: 110px; left: 25px; right: 22px; display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 8px 16px; }
+.control-bar.menu-controls { top: max(16px, env(safe-area-inset-top)); justify-content: flex-end; }
+.game-toolbar, .utility-controls { position: static; flex-wrap: wrap; align-items: center; max-width: 100%; }
+.utility-controls { margin-left: auto; }
+.language-control { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 9px; }
+.language-control select { width: 133px; max-width: 100%; min-height: 33px; font-size: 10px; padding: 6px; border: 1px solid #6a4e2e; border-radius: 2px; }
+.menu-layer, .finish-layer { padding-top: 65px; padding-bottom: 16px; }
+.launch-menu, .finish-menu { max-height: calc(100dvh - 90px); overflow-y: auto; max-width: 100%; }
+.finish-menu { width: min(400px, 100%); }
+@media (max-width: 800px) {
+  .control-bar { top: 76px; left: 10px; right: 10px; gap: 8px; }
+  .control-bar.menu-controls { top: max(10px, env(safe-area-inset-top)); }
+  .language-control select { width: 126px; min-height: 29px; font-size: 9px; }
+  .sobriety { width: 34%; }
+  .sobriety>div:first-child { align-items: start; }
+  .sobriety b { font-size: 16px; }
+  .sobriety small { font-size: 9px; }
+  .launch-menu { padding-inline: 7px; }
+}
+@media (max-width: 360px) {
+  .overline { letter-spacing: 1.5px; }
+  .settings-menu { padding: 10px; }
+  .setting-row { gap: 6px; }
+  .sobriety>div:first-child { font-size: 7px; }
+  .sobriety b { font-size: 14px; }
+}

@@ -25,6 +25,7 @@ async function stage(page, name) { await page.waitForFunction(stage => document.
       page.on('pageerror', error => errors.push(error.message));
       await page.addInitScript(settings => {
         localStorage.setItem('shot-roulette-settings', JSON.stringify(settings));
+        localStorage.setItem('shot-roulette-language', 'ru');
       }, { maxSobriety: fatal ? 1 : 2, random, shotCount: edge ? 5 : water ? 2 : 1, alcoholCount: edge ? 5 : 1, recovery: 0, speed: 1, sound: false });
       await page.goto(baseURL);
       await page.waitForFunction(() => !document.querySelector('.asset-loading'));

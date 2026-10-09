@@ -3,8 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { Game } from '@/game/GameEngine';
 import { assets, handAsset, sceneShots, actorAssets } from '@/art/assets';
 import { renderScene } from '@/art/renderScene';
+import { dictionaries, type Locale } from '@/i18n/translations';
 
-export default function GameCanvas({ game, onShot, onReady }: { game: Game; onShot: (id: number) => void; onReady?: (ready: boolean) => void }) {
+export default function GameCanvas({ game, locale, onShot, onReady }: { game: Game; locale: Locale; onShot: (id: number) => void; onReady?: (ready: boolean) => void }) {
+  const t = dictionaries[locale];
   const ref = useRef<HTMLCanvasElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const hover = useRef<number | undefined>(undefined);
@@ -35,12 +37,12 @@ export default function GameCanvas({ game, onShot, onReady }: { game: Game; onSh
   }, [onReady]);
   useEffect(() => {
     if (!ref.current) return;
-    return renderScene(ref.current, game, size, images, hover, phaseClock);
-  }, [game, size, images]);
+    return renderScene(ref.current, game, size, images, hover, phaseClock, locale);
+  }, [game, size, images, locale]);
 
   return <div className="world" ref={container} data-phase={game.phase}>
-    <canvas ref={ref} width={size.width} height={size.height} aria-label="Вид от первого лица: тёмный бар, силуэт соперника и шоты в свете лампы" role="img"/>
-    {!images[assets.background] && <div className="asset-loading" role="status">{error ? 'Не удалось загрузить спрайты. Обнови страницу.' : 'Бар открывается…'}</div>}
-    {!preview && shots.map((s, i) => <button key={s.id} className="shot-target" style={{ left: `${(positions[i].x - 15) / size.width * 100}%`, top: `${(positions[i].y - 23) / size.height * 100}%`, width: `${30 / size.width * 100}%`, height: `${51 / size.height * 100}%` }} disabled={!canSelect || s.used} onPointerEnter={() => { hover.current = s.id; }} onPointerLeave={() => { hover.current = undefined; }} onFocus={() => { hover.current = s.id; }} onBlur={() => { hover.current = undefined; }} onClick={() => onShot(s.id)} aria-label={`Шот ${s.id + 1}${s.used ? s.alcohol ? ', алкоголь, выпит' : ', вода, выпит' : ', закрыт'}`}/>)}
+    <canvas ref={ref} width={size.width} height={size.height} aria-label={t.scene} role="img"/>
+    {!images[assets.background] && <div className="asset-loading" role="status">{error ? t.loadError : t.loading}</div>}
+    {!preview && shots.map((s, i) => <button key={s.id} className="shot-target" style={{ left: `${(positions[i].x - 15) / size.width * 100}%`, top: `${(positions[i].y - 23) / size.height * 100}%`, width: `${30 / size.width * 100}%`, height: `${51 / size.height * 100}%` }} disabled={!canSelect || s.used} onPointerEnter={() => { hover.current = s.id; }} onPointerLeave={() => { hover.current = undefined; }} onFocus={() => { hover.current = s.id; }} onBlur={() => { hover.current = undefined; }} onClick={() => onShot(s.id)} aria-label={`${t.shot} ${s.id + 1}, ${s.used ? s.alcohol ? t.drunkAlcohol : t.drunkWater : t.closed}`}/>)}
   </div>;
 }

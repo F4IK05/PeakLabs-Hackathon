@@ -3,8 +3,10 @@ import type { Game } from '@/game/GameEngine';
 import { assets, drinkFrameAsset, gestureFrameAsset, sceneShots, paintedFrame, opponentLayout } from './assets';
 import { clamp, drinkPose, drinkFrame, frameHasGlass, playerGlassPivot, phaseDuration, smooth, opponentHand } from './animation';
 import { opponentPose, paintAdjustedArm } from './opponentPose';
+import { dictionaries, type Locale } from '@/i18n/translations';
 
-export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width: number; height: number }, images: Record<string, HTMLImageElement>, hover: { current: number | undefined }, clock: { current: { key: string; start: number } }) {
+export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width: number; height: number }, images: Record<string, HTMLImageElement>, hover: { current: number | undefined }, clock: { current: { key: string; start: number } }, locale: Locale = 'en') {
+  const t = dictionaries[locale];
   const context = canvas.getContext('2d'); if (!context || !images[assets.background]) return () => {};
   const c = context;
   const adjustedFrames = new Map<string, HTMLCanvasElement>();
@@ -126,7 +128,7 @@ export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width
       sprite(assets.empty, x - glassSize / 2, y - glassSize / 2 - 5, glassSize);
       c.globalAlpha = fade * reveal; sprite(selected.alcohol ? assets.alcohol : assets.water, x - glassSize / 2, y - glassSize / 2 - 5, glassSize);
       c.textAlign = 'center'; c.fillStyle = selected.alcohol ? '#ffcc82' : '#b9deea'; c.font = 'bold 11px monospace';
-      if (reveal > .5) { c.fillText(selected.alcohol ? 'АЛКОГОЛЬ' : 'ВОДА', x, y + 32); c.font = '8px monospace'; c.fillText(selected.alcohol ? '−1 ТРЕЗВОСТЬ' : 'БЕЗ ПОТЕРЬ', x, y + 45); }
+      if (reveal > .5) { c.fillText(selected.alcohol ? t.revealAlcohol : t.revealWater, x, y + 32, 144); c.font = '8px monospace'; c.fillText(selected.alcohol ? t.penalty : t.noLoss, x, y + 45, 144); }
       c.restore();
       if (selected.alcohol && game.loser === 'player' && progress < .4) { c.globalAlpha = .1 * (1 - progress / .4); c.fillStyle = '#9b3424'; c.fillRect(0, 0, w, h); c.globalAlpha = 1; }
     }
