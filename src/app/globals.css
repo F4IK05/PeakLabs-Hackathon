@@ -1,0 +1,110 @@
+@import "tailwindcss";
+:root { color-scheme: dark; --ink: #ebcca0; --muted: #b09a7e; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #080709; color: var(--ink); font-family: 'Courier New', monospace; }
+button, select { font: inherit; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:disabled { cursor: default; }
+button:focus-visible, select:focus-visible { outline: 2px solid #ffdf97; outline-offset: 3px; }
+.game-screen { position: fixed; inset: 0; overflow: hidden; height: 100dvh; }
+.world { position: absolute; inset: 0; }
+.world canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.shot-target { position: absolute; z-index: 2; background: transparent; border: 0; padding: 0; }
+.shot-target:focus-visible { outline: 2px dashed #f0cb84; }
+.asset-loading { position: absolute; inset: 0; display: grid; place-items: center; background: #080709; font-size: 14px; }
+img { image-rendering: pixelated; }
+.sprite-button { position: relative; display: inline-flex; align-items: center; justify-content: center; background: none; border: 0; color: #f0d3a6; padding: 16px 23px; min-height: 56px; text-shadow: 2px 2px #21150e; font-weight: bold; }
+.button-art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.active-art { visibility: hidden; }
+.sprite-button:hover:not(:disabled) .active-art, .sprite-button:focus-visible .active-art { visibility: visible; }
+.sprite-button:active:not(:disabled) { transform: translateY(2px); }
+.sprite-button:disabled { opacity: .48; }
+.button-content { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.menu-layer, .finish-layer { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; background: #08070999; padding: 22px; }
+.launch-menu { width: min(440px, 100%); max-height: calc(100dvh - 70px); overflow-y: auto; text-align: center; padding: 20px 25px; }
+.overline { font-size: 10px; letter-spacing: 3px; margin: 0 0 20px; color: #cbaa75; }
+h1 { font-size: clamp(50px, 8vw, 78px); line-height: .95; font-weight: 900; letter-spacing: -4px; margin: 0; color: #edc589; text-shadow: 4px 5px #140d09; }
+h1 span { font-size: .77em; letter-spacing: -3px; }
+.menu-tagline { font-size: 12px; margin: 23px 0 30px; color: #d0b18b; text-shadow: 2px 2px #080709; }
+.menu-buttons { max-width: 285px; margin: auto; }
+.menu-buttons .sprite-button, .settings-menu>.sprite-button, .finish-menu>.sprite-button { width: 100%; margin-bottom: 12px; }
+.rule-hint { line-height: 1.9; font-size: 11px; margin: 20px 0 25px; color: #c4ae8e; }
+.menu-footnote { font-size: 8px; letter-spacing: 1px; color: #a78b67; }
+.settings-menu { background: #110e0be8; padding: 16px; margin: 16px 0; }
+.settings-menu h2 { font-size: 14px; margin: 0 0 14px; }
+.with-settings h1 { font-size: 45px; }
+.with-settings .menu-tagline { margin: 14px 0; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 9px 0; font-size: 11px; text-align: left; }
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper .sprite-button { min-height: 32px; width: 34px; padding: 5px; }
+.stepper output { width: 23px; text-align: center; font-size: 14px; }
+select { border: 0; background: #2b2117; color: var(--ink); padding: 5px; }
+.settings-menu>.sprite-button { margin-top: 12px; font-size: 12px; min-height: 46px; }
+.settings-links { display: flex; justify-content: space-between; gap: 12px; }
+.settings-links button { background: none; border: 0; color: var(--muted); font-size: 10px; padding: 7px 0; }
+.settings-warning { font-size: 10px; line-height: 1.6; color: #c18e59; text-align: left; }
+.hud { position: absolute; left: 30px; right: 30px; top: max(20px, env(safe-area-inset-top)); z-index: 3; display: flex; justify-content: space-between; pointer-events: none; }
+.sobriety { width: min(280px, 30vw); text-shadow: 2px 2px #080709; }
+.sobriety>div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11px; letter-spacing: 2px; }
+.sobriety b { font-size: 23px; }
+.sobriety small { font-size: 12px; color: #b4a187; }
+.sobriety-tokens { display: flex; margin-top: 4px; }
+.sobriety-tokens img { width: 27px; flex: 1; min-width: 0; max-width: 28px; height: 30px; object-fit: contain; }
+.round-counter { position: absolute; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 3px; text-align: center; text-shadow: 2px 2px #080709; }
+.round-counter b { display: block; font-size: 22px; margin-top: 4px; }
+.game-toolbar { position: absolute; left: 25px; top: 110px; z-index: 3; display: flex; gap: 8px; }
+.game-toolbar .sprite-button { font-size: 10px; min-height: 34px; padding: 8px 16px; }
+.turn-controls { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(600px, calc(100% - 32px)); z-index: 3; text-align: center; }
+.turn-message { font-size: 13px; line-height: 1.5; margin: 0 0 12px; text-shadow: 2px 2px #080709, -1px -1px #080709; min-height: 20px; }
+.choices { display: flex; gap: 10px; justify-content: center; }
+.watch-animation .choices { opacity: .12; pointer-events: none; }
+.watch-animation .table-count { opacity: .4; }
+.choices .sprite-button { flex: 1; min-width: 0; padding: 12px 15px; min-height: 75px; font-size: 12px; }
+.choices .button-content { gap: 6px; }
+.choices .button-content img { width: 45px; height: 45px; object-fit: contain; }
+.table-count { font-size: 9px; margin: 10px 0 0; color: #c4ab86; text-shadow: 1px 2px #080709; }
+.utility-controls { position: absolute; right: 22px; bottom: max(17px, env(safe-area-inset-bottom)); z-index: 6; display: flex; gap: 7px; }
+.utility-controls .sprite-button { padding: 8px 13px; min-height: 33px; font-size: 9px; }
+.finish-layer { z-index: 8; background: #080709ce; }
+.finish-menu { text-align: center; max-width: 400px; padding: 24px; }
+.finish-menu h2 { font-size: 30px; line-height: 1.25; }
+.finish-menu p { font-size: 12px; line-height: 1.7; }
+.finish-menu .final-score { margin: 22px 0; font-size: 18px; }
+.finish-menu>.sprite-button { font-size: 12px; }
+@media (max-width: 800px) {
+  .hud { left: 14px; right: 14px; top: max(14px, env(safe-area-inset-top)); }
+  .sobriety { width: 36%; }
+  .sobriety>div:first-child { font-size: 8px; letter-spacing: 0; gap: 4px; }
+  .sobriety b { font-size: 18px; }
+  .sobriety small { font-size: 10px; }
+  .round-counter { font-size: 8px; letter-spacing: 0; }
+  .round-counter b { font-size: 17px; }
+  .sobriety-tokens img { height: 23px; }
+  .game-toolbar { left: 10px; top: 76px; }
+  .utility-controls { top: 76px; bottom: auto; right: 10px; }
+  .utility-controls .sprite-button, .game-toolbar .sprite-button { font-size: 8px; padding: 7px 10px; min-height: 29px; }
+  .turn-controls { bottom: max(20px, env(safe-area-inset-bottom)); }
+  .choices { gap: 5px; }
+  .choices .sprite-button { padding: 8px 4px; min-height: 74px; font-size: 10px; }
+  .choices .button-content { flex-direction: column; gap: 0; }
+  .choices .button-content img { width: 36px; height: 36px; }
+  .turn-message { font-size: 11px; }
+  .table-count { font-size: 8px; }
+  .table-count span { display: block; margin-top: 5px; }
+  .launch-menu { padding: 15px 7px; }
+  .menu-layer { padding: 12px; }
+  .settings-menu { padding: 13px; }
+}
+@media (max-height: 560px) and (min-width: 650px) {
+  .launch-menu h1 { font-size: 46px; }
+  .overline { margin-bottom: 10px; }
+  .menu-tagline { margin: 12px 0; }
+  .menu-buttons .sprite-button { min-height: 42px; margin-bottom: 6px; }
+  .rule-hint { margin: 10px 0; }
+  .choices .sprite-button { min-height: 51px; }
+  .choices .button-content img { width: 30px; height: 30px; }
+  .turn-controls { bottom: 10px; }
+  .turn-message { margin-bottom: 6px; }
+  .hud { top: 10px; }
+  .game-toolbar { top: 80px; }
+}

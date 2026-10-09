@@ -1,0 +1,20 @@
+import { describe, expect, it } from 'vitest';
+import { start, transition, type Game } from './GameEngine';
+import { defaults, normalize } from './GameSettings';
+import { moves, winner } from './RockPaperScissors';
+import { generateShots, randomShot } from './ShotManager';
+import { recover } from './SobrietySystem';
+const drinking = (patch: Partial<Game> = {}): Game => ({ ...start(defaults), phase: 'drinking', loser: 'player', selected: 0, shots: [{ id: 0, alcohol: true, used: false }], ...patch });
+describe('rules', () => {
+  it('all nine matchups', () => { for (const p of moves) for (const ai of moves) expect(winner(p, ai)).toBe(p === ai ? 'draw' : ({ rock: 'scissors', scissors: 'paper', paper: 'rock' }[p] === ai ? 'player' : 'ai')); });
+  it('draw consumes nothing', () => { const g = start(defaults); const next = transition(transition(g, { type: 'move', move: 'rock', aiMove: 'rock' }), { type: 'advance' }); expect(next.phase).toBe('choose'); expect(next.player).toBe(6); expect(next.shots).toEqual(g.shots); });
+  it('death precedes recovery', () => { const next = transition(drinking({ player: 1 }), { type: 'advance' }); expect(next.phase).toBe('gameOver'); expect(next.player).toBe(0); expect(next.victor).toBe('ai'); expect(transition(next, { type: 'advance' })).toBe(next); });
+  it('AI death means victory', () => { expect(transition(drinking({ loser: 'ai', ai: 1 }), { type: 'advance' }).victor).toBe('player'); });
+  it('water preserves sobriety', () => { const next = transition(drinking({ shots: [{ id: 0, alcohol: false, used: false }, { id: 1, alcohol: true, used: false }] }), { type: 'advance' }); expect(next.player).toBe(6); expect(transition(next, { type: 'advance' }).phase).toBe('choose'); });
+  it('last alcohol ends round and recovery is capped', () => { let g = transition(drinking({ player: 4, shots: [{ id: 0, alcohol: true, used: false }, { id: 1, alcohol: false, used: false }] }), { type: 'advance' }); g = transition(g, { type: 'advance' }); expect(g.phase).toBe('roundEnd'); g = transition(g, { type: 'advance' }); expect(g.round).toBe(2); expect(g.player).toBe(4); expect(g.ai).toBe(6); expect(g.shots.filter(s => s.alcohol)).toHaveLength(2); expect(g.shots.every(s => !s.used)).toBe(true); });
+  it('blocks moves while animating and reused shots', () => { const g = drinking(); expect(transition(g, { type: 'move', move: 'paper' })).toBe(g); expect(transition(g, { type: 'shot', id: 0 })).toBe(g); const select = { ...g, phase: 'select' as const, shots: [{ id: 0, alcohol: true, used: true }] }; expect(transition(select, { type: 'shot', id: 0 })).toBe(select); expect(transition(select, { type: 'shot', id: 99 })).toBe(select); });
+  it('one shot and zero recovery', () => { expect(start({ ...defaults, shotCount: 1, alcoholCount: 1 }).shots).toHaveLength(1); expect(recover(3, 0, 6)).toBe(3); expect(recover(6, 4, 6)).toBe(6); });
+  it('shuffle preserves exact counts', () => { for (let i = 0; i < 100; i++) { const shots = generateShots(12, 7); expect(shots.filter(s => s.alcohol)).toHaveLength(7); expect(new Set(shots.map(s => s.id)).size).toBe(12); } });
+  it('AI only picks available IDs', () => { expect(randomShot([2, 8, 9], () => 0.5)).toBe(8); });
+  it('validates persisted settings', () => { expect(normalize({ shotCount: 0, alcoholCount: 99 }).alcoholCount).toBe(1); expect(normalize({ maxSobriety: NaN }).maxSobriety).toBe(6); });
+});
