@@ -23,13 +23,14 @@ export function opponentLayout(width: number, height: number) {
 }
 export interface SceneShot { x: number; y: number }
 export function sceneShots(count: number, width: number, height: number): SceneShot[] {
-  const columns = Math.min(count, 5), rows = Math.ceil(count / columns);
+  if (count <= 0) return [];
+  const columns = Math.min(count, 5);
   const layout = opponentLayout(width,height);
-  const lanes: Record<number, number[]> = {1:[.53],2:[.36,.64],3:[.36,.53,.64],4:[.07,.36,.64,.93],5:[.07,.36,.53,.64,.93]};
+  const spacing = Math.min(layout.size * .21, (width - 72) / Math.max(1, columns - 1));
+  const firstY = layout.tableEdge + layout.size * .07;
   return Array.from({ length: count }, (_, i) => {
     const row = Math.floor(i / columns); const rowCount = Math.min(columns, count - row * columns);
-    const lane=lanes[rowCount][i%columns];
-    return { x: layout.x + lane*layout.size, y:layout.y+layout.size*(lane<.2||lane>.8?.84:.81)+row*36 };
+    return { x: width / 2 + (i % columns - (rowCount - 1) / 2) * spacing, y: firstY + row * 48 };
   });
 }
 

@@ -2,10 +2,12 @@ import playerBounds from './playerBounds.json';
 import type { Game } from '@/game/GameEngine';
 import { assets, drinkFrameAsset, gestureFrameAsset, sceneShots, paintedFrame, opponentLayout } from './assets';
 import { clamp, drinkPose, drinkFrame, frameHasGlass, playerGlassPivot, phaseDuration, smooth, opponentHand } from './animation';
+import { opponentPose, paintAdjustedArm } from './opponentPose';
 
 export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width: number; height: number }, images: Record<string, HTMLImageElement>, hover: { current: number | undefined }, clock: { current: { key: string; start: number } }) {
   const context = canvas.getContext('2d'); if (!context || !images[assets.background]) return () => {};
   const c = context;
+  const adjustedFrames = new Map<string, HTMLCanvasElement>();
   const key = `${game.phase}/${game.round}/${game.selected}/${game.playerMove}/${game.aiMove}`;
   if (clock.current.key !== key) clock.current = { key, start: performance.now() };
   let frame = 0;
@@ -47,17 +49,19 @@ export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width
     c.save();c.globalAlpha=.55;
     sprite(assets.rigShadow,w/2-actorSize*.56,layout.tableEdge-2,actorSize*1.12,actorSize*.28);c.restore();
     let opponentURL=paintedFrame('gesture',0),flip=false;
+    let adjusted: HTMLCanvasElement | undefined;
     if(aiDrinking&&shotPos) {
-      const lane=(shotPos.x-layout.x)/actorSize;
-      const outer=lane<.23||lane>.77,center=Math.abs(lane-.53)<.07;
-      if(center) canvas.dataset.opponentHand='screen-left';
-      const sequence=outer?'outer':center?'center':'inner';
-      flip=mirrored&&!center;
-      opponentURL=paintedFrame(sequence,index);
-      // Authored whole poses connect the arm to the coat. No limb scaling or rotation.
-      if(index===2 && !outer) {
-        const cel=center?3:2;
-        opponentURL=paintedFrame('poses',cel);
+      const registered=opponentPose(shotPos,layout,index);
+      flip=registered.flip;
+      canvas.dataset.opponentHand=flip?'screen-right':'screen-left';
+      opponentURL=paintedFrame(registered.name,registered.cel);
+      if ((registered.offset.x || registered.offset.y) && images[opponentURL]) {
+        const cacheKey=`${opponentURL}/${selectedIndex}`;
+        adjusted=adjustedFrames.get(cacheKey);
+        if(!adjusted) {
+          adjusted=paintAdjustedArm(images[opponentURL],registered.offset);
+          adjustedFrames.set(cacheKey,adjusted);
+        }
       }
     } else if(game.phase==='clash'&&game.aiMove) {
       const beat=Math.floor(progress/.58*6)%2;
@@ -68,11 +72,19 @@ export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width
       c.save();c.filter='brightness(0.66)';
       const breathing=game.phase==='choose'||game.phase==='menu'?Math.round(Math.sin(idleTime*1.1)):0;
       if(flip){c.translate(w,0);c.scale(-1,1);}
-      // The table occludes the torso; only the painted active forearm is in front.
-      const armWidth=aiDrinking ? (index===4||index===5 ? .31 : index===3 ? .34 : .64) : .56;
-      c.beginPath();c.rect(0,0,w,layout.tableEdge);
-      c.rect(baseX,layout.tableEdge,actorSize*armWidth,h-layout.tableEdge);c.clip();
-      sprite(opponentURL,baseX,baseY+breathing,actorSize);c.restore();
+      // Drinking cels already have a painted torso boundary. Their adjusted
+      // forearm can extend beyond the old fixed mask when reaching a shot.
+      if(!aiDrinking) {
+        c.beginPath();c.rect(0,0,w,layout.tableEdge);
+        c.rect(baseX,layout.tableEdge,actorSize*.56,h-layout.tableEdge);c.clip();
+      }
+      if(adjusted) {
+        const padding=(adjusted.width-256)/2*actorSize/256;
+        const extent=adjusted.width/256*actorSize;
+        c.drawImage(adjusted,baseX-padding,baseY+breathing-padding,extent,extent);
+      }
+      else sprite(opponentURL,baseX,baseY+breathing,actorSize);
+      c.restore();
     };
     const frameContainsGlass = !!pose && frameHasGlass(index, aiDrinking);
     canvas.dataset.animationStage = pose?.stage ?? game.phase;

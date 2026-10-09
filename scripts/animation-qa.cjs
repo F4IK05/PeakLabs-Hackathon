@@ -59,6 +59,8 @@ async function stage(page, name) { await page.waitForFunction(stage => document.
       await page.screenshot({ path: `artifacts/animation/${name}-grasp.png` });
       const torsoX = await page.locator('canvas').getAttribute('data-opponent-x');
       if (edge) assert.equal(await page.locator('canvas').getAttribute('data-opponent-hand'), random < .5 ? 'screen-left' : 'screen-right');
+      await stage(page, 'lift');
+      await page.screenshot({ path: `artifacts/animation/${name}-lift.png` });
       await stage(page, 'sip');
       if (edge) assert.ok(Math.abs(Number(await page.locator('canvas').getAttribute('data-opponent-x'))-Number(torsoX)) <= 3, 'Torso must stay seated');
       await page.waitForTimeout(200);
