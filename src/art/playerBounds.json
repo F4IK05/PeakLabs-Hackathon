@@ -1,0 +1,86 @@
+{
+  "/art/player-drink-0.png": {
+    "left": 73,
+    "top": 65,
+    "width": 183,
+    "height": 191,
+    "url": "/art/player-drink-0-trimmed.png"
+  },
+  "/art/player-drink-1.png": {
+    "left": 0,
+    "top": 57,
+    "width": 256,
+    "height": 199,
+    "url": "/art/player-drink-1-trimmed.png"
+  },
+  "/art/player-drink-2.png": {
+    "left": 0,
+    "top": 58,
+    "width": 256,
+    "height": 198,
+    "url": "/art/player-drink-2-trimmed.png"
+  },
+  "/art/player-drink-3.png": {
+    "left": 0,
+    "top": 18,
+    "width": 256,
+    "height": 238,
+    "url": "/art/player-drink-3-trimmed.png"
+  },
+  "/art/player-drink-4.png": {
+    "left": 46,
+    "top": 0,
+    "width": 210,
+    "height": 256,
+    "url": "/art/player-drink-4-trimmed.png"
+  },
+  "/art/player-drink-5.png": {
+    "left": 0,
+    "top": 0,
+    "width": 256,
+    "height": 256,
+    "url": "/art/player-drink-5-trimmed.png"
+  },
+  "/art/player-drink-6.png": {
+    "left": 0,
+    "top": 0,
+    "width": 256,
+    "height": 256,
+    "url": "/art/player-drink-6-trimmed.png"
+  },
+  "/art/player-drink-7.png": {
+    "left": 0,
+    "top": 0,
+    "width": 256,
+    "height": 256,
+    "url": "/art/player-drink-7-trimmed.png"
+  },
+  "/art/whole-gesture-0.png": {
+    "left": 67,
+    "top": 55,
+    "width": 189,
+    "height": 201,
+    "url": "/art/whole-gesture-0-trimmed.png"
+  },
+  "/art/whole-gesture-1.png": {
+    "left": 0,
+    "top": 12,
+    "width": 256,
+    "height": 244,
+    "url": "/art/whole-gesture-1-trimmed.png"
+  },
+  "/art/whole-gesture-2.png": {
+    "left": 0,
+    "top": 10,
+    "width": 256,
+    "height": 246,
+    "url": "/art/whole-gesture-2-trimmed.png"
+  },
+  "/art/whole-gesture-3.png": {
+    "left": 0,
+    "top": 55,
+    "width": 256,
+    "height": 201,
+    "url": "/art/whole-gesture-3-trimmed.png"
+  }
+}

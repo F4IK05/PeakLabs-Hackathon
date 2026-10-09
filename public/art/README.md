@@ -16,3 +16,11 @@
 Промпты сохранены в `prompts.md`. Новый фон и атлас корпуса созданы встроенным image_gen с `bar-background.png` как референсом. Нарезка корпуса: `node scripts/slice-rig.cjs`. Старый `hands.png` оставлен как неиспользуемый артефакт предыдущей версии.
 
 Текущая версия использует player-drink-atlas.png, opponent-drink-atlas.png (по 8 кадров) и whole-gesture-atlas.png (8 поз). Экспорт: node scripts/slice-actors.cjs, 256 x 256 с сохранением прозрачных полей. Все части руки и стакан нарисованы в одном кадре. Старые body-rig/arm-upper/arm-lower больше не используются; описание соединений выше относится к предыдущей версии.
+
+Текущий риг оппонента: articulated-rig-atlas.png и articulated-rig-atlas-v2.png, экспорт node scripts/slice-articulated-rig.cjs. Отдельные rig-body, rig-upper, rig-fore и rig-* кисти. Старые цельные кадры оппонента остаются архивом, runtime использует только раздельный риг. Тень: rig-shadow.png. Промпты: articulated-prompts.md. Создано встроенным image_gen, не в Aseprite.
+
+Обрезка прозрачных полей руки игрока: node scripts/trim-player-frames.cjs (после slice-actors.cjs). Экспорт *-trimmed.png и src/art/playerBounds.json сохраняет привязки кисти к стакану. Рендер выводит нижний срез рукава за границу viewport.
+
+vertical-hands-atlas.png и hand-v3-*.png — неиспользуемый эксперимент, откат по просьбе пользователя. Текущие кисти: rig-rest/rock/scissors/paper/grip/empty.png. Риг использует прежний solveArm, ограничения плеча и локтя, плавный переход углов при постоянной длине сегментов. Плечо рисуется за корпусом, предплечье и кисть поверх.
+
+Раздельный риг и sleeve-v4 отключены и оставлены как прежние варианты. Текущий оппонент использует цельные painted-*-*.png: плечо, предплечье и кисть нарисованы вместе. Исходники: painted-outer/inner/center/gesture.png и opponent-painted-poses.png. Экспорт с регистрацией головы: scripts/slice-painted-opponent.cjs. Промпты: painted-opponent-prompts.md. Нарисовано встроенным image_gen; PNG можно редактировать в Aseprite.

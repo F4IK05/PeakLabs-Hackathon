@@ -26,7 +26,8 @@ export default function GameCanvas({ game, onShot, onReady }: { game: Game; onSh
   }, []);
   useEffect(() => {
     let active = true;
-    const urls = [...Object.values(assets), ...actorAssets, ...(['rock', 'scissors', 'paper', 'reach'] as const).flatMap(move => [handAsset(move), handAsset(move, true)])];
+    const sceneAssets=Object.entries(assets).filter(([name])=>!name.startsWith('rig')||name==='rigShadow').map(([,url])=>url);
+    const urls = [...sceneAssets, ...actorAssets, ...(['rock', 'scissors', 'paper', 'reach'] as const).map(move => handAsset(move))];
     Promise.all(urls.map(url => new Promise<[string, HTMLImageElement]>((resolve, reject) => {
       const image = new Image(); image.onload = () => resolve([url, image]); image.onerror = reject; image.src = url;
     }))).then(entries => { if (active) { setImages(Object.fromEntries(entries)); onReady?.(true); } }).catch(() => { if (active) setError(true); });
@@ -40,6 +41,6 @@ export default function GameCanvas({ game, onShot, onReady }: { game: Game; onSh
   return <div className="world" ref={container} data-phase={game.phase}>
     <canvas ref={ref} width={size.width} height={size.height} aria-label="Вид от первого лица: тёмный бар, силуэт соперника и шоты в свете лампы" role="img"/>
     {!images[assets.background] && <div className="asset-loading" role="status">{error ? 'Не удалось загрузить спрайты. Обнови страницу.' : 'Бар открывается…'}</div>}
-    {!preview && shots.map((s, i) => <button key={s.id} className="shot-target" style={{ left: `${(positions[i].x - 23) / size.width * 100}%`, top: `${(positions[i].y - 23) / size.height * 100}%`, width: `${46 / size.width * 100}%`, height: `${51 / size.height * 100}%` }} disabled={!canSelect || s.used} onPointerEnter={() => { hover.current = s.id; }} onPointerLeave={() => { hover.current = undefined; }} onFocus={() => { hover.current = s.id; }} onBlur={() => { hover.current = undefined; }} onClick={() => onShot(s.id)} aria-label={`Шот ${s.id + 1}${s.used ? s.alcohol ? ', алкоголь, выпит' : ', вода, выпит' : ', закрыт'}`}/>)}
+    {!preview && shots.map((s, i) => <button key={s.id} className="shot-target" style={{ left: `${(positions[i].x - 15) / size.width * 100}%`, top: `${(positions[i].y - 23) / size.height * 100}%`, width: `${30 / size.width * 100}%`, height: `${51 / size.height * 100}%` }} disabled={!canSelect || s.used} onPointerEnter={() => { hover.current = s.id; }} onPointerLeave={() => { hover.current = undefined; }} onFocus={() => { hover.current = s.id; }} onBlur={() => { hover.current = undefined; }} onClick={() => onShot(s.id)} aria-label={`Шот ${s.id + 1}${s.used ? s.alcohol ? ', алкоголь, выпит' : ', вода, выпит' : ', закрыт'}`}/>)}
   </div>;
 }

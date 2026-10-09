@@ -1,6 +1,7 @@
+import playerBounds from './playerBounds.json';
 import type { Game } from '@/game/GameEngine';
-import { assets, drinkFrameAsset, gestureFrameAsset, sceneShots } from './assets';
-import { clamp, drinkPose, drinkFrame, frameHasGlass, playerGlassPivot, phaseDuration, smooth } from './animation';
+import { assets, drinkFrameAsset, gestureFrameAsset, sceneShots, paintedFrame, opponentLayout } from './assets';
+import { clamp, drinkPose, drinkFrame, frameHasGlass, playerGlassPivot, phaseDuration, smooth, opponentHand } from './animation';
 
 export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width: number; height: number }, images: Record<string, HTMLImageElement>, hover: { current: number | undefined }, clock: { current: { key: string; start: number } }) {
   const context = canvas.getContext('2d'); if (!context || !images[assets.background]) return () => {};
@@ -15,6 +16,11 @@ export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width
   const scale = Math.max(w / bg.width, h / bg.height);
   const bgW = bg.width * scale, bgH = bg.height * scale, bgX = (w - bgW) / 2, bgY = (h - bgH) / 2;
   const sprite = (url: string, x: number, y: number, width: number, height = width) => {
+    const crop = playerBounds[url as keyof typeof playerBounds];
+    if (crop && images[crop.url]) {
+      c.drawImage(images[crop.url], Math.round(x+crop.left/256*width), Math.round(y+crop.top/256*height), Math.round(crop.width/256*width), Math.round(crop.height/256*height));
+      return;
+    }
     const image = images[url]; if (image && width > 0 && height > 0) c.drawImage(image, Math.round(x), Math.round(y), Math.round(width), Math.round(height));
   };
   function draw(now: number) {
@@ -28,30 +34,49 @@ export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width
     const shake = alcoholReveal && game.loser === 'player' && progress < .35 ? Math.round(Math.sin(time * .07) * 2 * (1 - progress / .35)) : 0;
     c.clearRect(0, 0, w, h); c.save(); c.translate(shake, 0);
     c.drawImage(bg, Math.round(bgX), Math.round(bgY), Math.ceil(bgW), Math.ceil(bgH));
-    const breath = Math.round(Math.sin(idleTime * 1.65) * 1.5), sway = Math.round(Math.sin(idleTime * .73) * 1.5);
-    const actorSize = bgH * .70, baseX = w / 2 - actorSize / 2 + sway, baseY = bgY + bgH * .105 + breath;
-    const sip = game.loser === 'ai' ? { x: w / 2, y: baseY + actorSize * .3 } : { x: w / 2 + 55, y: h * .82 };
-    const pose = game.phase === 'drinking' && shotPos ? drinkPose(progress, game.loser === 'ai' ? { x: w / 2 - 45, y: baseY + actorSize * .7 } : { x: w * .6, y: h + 70 }, { x: shotPos.x, y: shotPos.y }, sip) : undefined;
-    const index = drinkFrame(progress);
-    const aiDrinking = !!pose && game.loser === 'ai';
-    const counting = progress < .58;
-    const activeGesture = game.phase === 'clash' && game.aiMove;
-    const actorUrl = aiDrinking ? drinkFrameAsset(index, true) : activeGesture ? gestureFrameAsset(counting ? 'rock' : game.aiMove!, true) : drinkFrameAsset(7, true);
-    const reach = aiDrinking ? smooth(progress / .16) * (1 - smooth((progress - .94) / .06)) * (1 - pose!.proximity) : 0;
-    const actorX = baseX + (shotPos ? (shotPos.x - (baseX + actorSize * .43)) * reach : 0);
-    const actorY = baseY + (shotPos ? (shotPos.y - (baseY + actorSize * .85)) * reach : 0);
-    const flinch = alcoholReveal && game.loser === 'ai' ? Math.sin(progress * Math.PI * 5) * (1 - progress) * 3 : 0;
-    const slump = game.phase === 'gameOver' && game.victor === 'player' ? smooth(progress) * 9 : 0;
-    const bounce = activeGesture && counting ? Math.round(Math.sin(progress / .58 * Math.PI * 6) * 3) : 0;
-    // The entire torso, arm, wrist and held glass are ONE PNG frame.
-    // Table occlusion masks the coat below the rear edge, while the painted arm remains in front.
-    const fore = activeGesture ? [[.03,.48],[.25,.42],[.60,.46],[.61,.70],[.25,.84],[.03,.81]] : aiDrinking && (index === 4 || index === 5) ? [[.02,.45],[.18,.36],[.50,.10],[.60,.24],[.24,.68],[.08,.72]] : aiDrinking && index === 3 ? [[.01,.51],[.25,.48],[.61,.40],[.63,.57],[.22,.73],[.05,.69]] : !aiDrinking || index === 7 ? [[.04,.69],[.30,.70],[.51,.68],[.60,.73],[.56,.82],[.32,.85],[.06,.82]] : [[.04,.57],[.25,.63],[.44,.73],[.56,.76],[.56,.91],[.40,.94],[.20,.88],[.04,.76]];
-    c.save(); c.beginPath(); c.rect(0, 0, w, bgY + bgH * .552);
-    fore.forEach(([x, y], i) => { const px = actorX + x * actorSize, py = actorY + y * actorSize; if (i === 0) c.moveTo(px, py); else c.lineTo(px, py); });
-    c.closePath(); c.clip(); c.filter = 'brightness(0.62)';
-    sprite(actorUrl, actorX + flinch, actorY + slump + bounce, actorSize); c.restore();
+    const layout = opponentLayout(w,h);
+    const actorSize=layout.size, baseX=layout.x, baseY=layout.y;
+    const sip = game.loser === 'ai' ? { x: w/2, y:baseY+actorSize*.36 } : {x:w/2+55,y:h*.82};
+    const pose=game.phase==='drinking'&&shotPos?drinkPose(progress,game.loser==='ai'?{x:w/2-35,y:layout.tableEdge}:{x:w*.6,y:h+70},shotPos,sip):undefined;
+    const index=drinkFrame(progress), aiDrinking=!!pose&&game.loser==='ai';
+    const counting=progress<.58;
+    const mirrored=!!(aiDrinking&&shotPos&&opponentHand(shotPos.x,w/2)==='screen-right');
+    canvas.dataset.opponentHand=mirrored?'screen-right':'screen-left';
+    canvas.dataset.opponentX=String(w/2);
+    canvas.dataset.opponentFrame=String(aiDrinking?index:0);
+    c.save();c.globalAlpha=.55;
+    sprite(assets.rigShadow,w/2-actorSize*.56,layout.tableEdge-2,actorSize*1.12,actorSize*.28);c.restore();
+    let opponentURL=paintedFrame('gesture',0),flip=false;
+    if(aiDrinking&&shotPos) {
+      const lane=(shotPos.x-layout.x)/actorSize;
+      const outer=lane<.23||lane>.77,center=Math.abs(lane-.53)<.07;
+      if(center) canvas.dataset.opponentHand='screen-left';
+      const sequence=outer?'outer':center?'center':'inner';
+      flip=mirrored&&!center;
+      opponentURL=paintedFrame(sequence,index);
+      // Authored whole poses connect the arm to the coat. No limb scaling or rotation.
+      if(index===2 && !outer) {
+        const cel=center?3:2;
+        opponentURL=paintedFrame('poses',cel);
+      }
+    } else if(game.phase==='clash'&&game.aiMove) {
+      const beat=Math.floor(progress/.58*6)%2;
+      const cel=progress<.12||progress>.94?0:counting?(beat?5:4):(['rock','scissors','paper'] as const).indexOf(game.aiMove)+1;
+      opponentURL=paintedFrame('gesture',cel);
+    }
+    const drawOpponent=()=>{
+      c.save();c.filter='brightness(0.66)';
+      const breathing=game.phase==='choose'||game.phase==='menu'?Math.round(Math.sin(idleTime*1.1)):0;
+      if(flip){c.translate(w,0);c.scale(-1,1);}
+      // The table occludes the torso; only the painted active forearm is in front.
+      const armWidth=aiDrinking ? (index===4||index===5 ? .31 : index===3 ? .34 : .64) : .56;
+      c.beginPath();c.rect(0,0,w,layout.tableEdge);
+      c.rect(baseX,layout.tableEdge,actorSize*armWidth,h-layout.tableEdge);c.clip();
+      sprite(opponentURL,baseX,baseY+breathing,actorSize);c.restore();
+    };
     const frameContainsGlass = !!pose && frameHasGlass(index, aiDrinking);
     canvas.dataset.animationStage = pose?.stage ?? game.phase;
+    drawOpponent();
     shots.forEach((s, i) => {
       const p = positions[i], picked = !!pose && s.id === game.selected;
       if (canSelect && hover.current === s.id && !s.used) sprite(assets.selectedPanel, p.x - 23, p.y + 20, 46, 15);
@@ -62,11 +87,13 @@ export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width
     if (game.phase === 'clash' && game.playerMove) {
       const playerSize = Math.max(145, Math.min(245, h * .5));
       const enter = smooth(progress / .15), exit = smooth((progress - .88) / .12);
-      const y = h + 10 - (playerSize + 10) * enter * (1 - exit) + (counting ? Math.sin(progress / .58 * Math.PI * 6) * 5 : 0);
-      sprite(gestureFrameAsset(counting ? 'rock' : game.playerMove), w / 2 - playerSize * .75, y, playerSize);
+      const y = h + 32 - playerSize * enter * (1 - exit) + (counting ? Math.sin(progress / .58 * Math.PI * 6) * 5 : 0);
+      sprite(gestureFrameAsset(counting ? 'rock' : game.playerMove), w / 2 + playerSize * .02, y, playerSize);
     }
     if (pose && game.loser === 'player' && shotPos) {
-      const playerSize = Math.max(145, Math.min(310, (h - shotPos.y) / .6));
+      // Keep the painted sleeve's bottom cut beyond the viewport in every cel,
+      // including low shots on portrait screens. Size stays fixed during the sip.
+      const playerSize = Math.max(145, (h - shotPos.y + 32) / .52);
       const pivot = playerGlassPivot[index];
       // Fixed aspect ratio, no rotations, no sleeves synthesized between endpoints.
       // The glass and fingers are baked into this same cel.
@@ -96,3 +123,6 @@ export function renderScene(canvas: HTMLCanvasElement, game: Game, size: { width
   }
   frame = requestAnimationFrame(draw); return () => cancelAnimationFrame(frame);
 }
+
+
+

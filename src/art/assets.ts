@@ -1,20 +1,35 @@
 import type { Move } from '@/game/RockPaperScissors';
+import playerBounds from './playerBounds.json';
 export const assets = {
   background: '/art/bar-empty.png',
   glass: '/art/shot-closed.png', empty: '/art/shot-empty.png', alcohol: '/art/shot-alcohol.png', water: '/art/shot-water.png',
   panel: '/art/ui-panel.png', selectedPanel: '/art/ui-panel-active.png',
   token: '/art/token-full.png', depleted: '/art/token-empty.png',
+  rigBody: '/art/rig-body.png', rigUpper: '/art/sleeve-upper-v4.png', rigFore: '/art/sleeve-fore-v4.png', rigElbow: '/art/sleeve-elbow-v4.png',
+  rigRest: '/art/rig-rest.png', rigRock: '/art/rig-rock.png', rigScissors: '/art/rig-scissors.png', rigPaper: '/art/rig-paper.png',
+  rigGrip: '/art/rig-grip.png', rigEmpty: '/art/rig-empty.png', rigSip: '/art/rig-sip.png', rigSipEmpty: '/art/rig-sip-empty.png',
+  rigShadow: '/art/rig-shadow.png',
 };
 export const handAsset = (move: Move | 'reach', opponent = false) => `/art/${opponent ? 'opponent' : 'player'}-${move}.png`;
 export const drinkFrameAsset = (frame: number, opponent = false) => `/art/${opponent ? 'opponent' : 'player'}-drink-${frame}.png`;
 export const gestureFrameAsset = (move: Move, opponent = false) => `/art/whole-gesture-${(['rock', 'scissors', 'paper'] as const).indexOf(move) + (opponent ? 4 : 0)}.png`;
-export const actorAssets = [...Array.from({ length: 8 }, (_, i) => drinkFrameAsset(i)), ...Array.from({ length: 8 }, (_, i) => drinkFrameAsset(i, true)), ...Array.from({ length: 8 }, (_, i) => `/art/whole-gesture-${i}.png`)];
+export const paintedFrame = (name: string, frame: number) => `/art/painted-${name}-${frame}.png`;
+export const actorAssets = [...Array.from({ length: 8 }, (_, i) => drinkFrameAsset(i)), ...Array.from({ length: 8 }, (_, i) => `/art/whole-gesture-${i}.png`), ...['poses','outer','inner','center','gesture'].flatMap(name=>Array.from({length:8},(_,i)=>paintedFrame(name,i))), ...Object.values(playerBounds).map(frame => frame.url)];
+export function opponentLayout(width: number, height: number) {
+  const bgHeight = Math.max(height, width * 941 / 1672);
+  const tableEdge = (height-bgHeight)/2 + bgHeight*.552;
+  const size = Math.min(bgHeight*.62,width*.92);
+  return { size, x:width/2-size/2, y:tableEdge-size*.77, tableEdge };
+}
 export interface SceneShot { x: number; y: number }
 export function sceneShots(count: number, width: number, height: number): SceneShot[] {
-  const columns = Math.min(count, 6); const spacing = Math.min(51, (width - 70) / columns);
-  const rows = Math.ceil(count / columns);
+  const columns = Math.min(count, 5), rows = Math.ceil(count / columns);
+  const layout = opponentLayout(width,height);
+  const lanes: Record<number, number[]> = {1:[.53],2:[.36,.64],3:[.36,.53,.64],4:[.07,.36,.64,.93],5:[.07,.36,.53,.64,.93]};
   return Array.from({ length: count }, (_, i) => {
     const row = Math.floor(i / columns); const rowCount = Math.min(columns, count - row * columns);
-    return { x: width / 2 + (i % columns - (rowCount - 1) / 2) * spacing, y: height * (height / width > 1.3 ? .79 : .69) + (row - (rows - 1) / 2) * 40 };
+    const lane=lanes[rowCount][i%columns];
+    return { x: layout.x + lane*layout.size, y:layout.y+layout.size*(lane<.2||lane>.8?.84:.81)+row*36 };
   });
 }
+
